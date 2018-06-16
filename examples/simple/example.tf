@@ -4,8 +4,7 @@ resource "aws_route53_zone" "example" {
 }
 
 module "dns_records" {
-  #source = "terraformdns/route53-recordsets/aws"
-  source = "../../"
+  source = "terraformdns/route53-recordsets/aws"
   # TODO: Constrain to a specific minor version before use in production
   # version = "~> N.N"
 
