@@ -6,22 +6,28 @@ terraform {
   }
 }
 
+locals {
+  recordsets = {
+    for rs in var.recordsets : "${rs.name} ${rs.type}" => rs
+  }
+}
+
 data "aws_route53_zone" "container" {
   zone_id = var.route53_zone_id
 }
 
 resource "aws_route53_record" "this" {
-  count = length(var.recordsets)
+  for_each = local.recordsets
 
   zone_id = data.aws_route53_zone.container.zone_id
 
   name = (
-    var.recordsets[count.index].name != "" ?
-    "${var.recordsets[count.index].name}.${data.aws_route53_zone.container.name}" :
+    each.value.name != "" ?
+    "${each.value.name}.${data.aws_route53_zone.container.name}" :
     data.aws_route53_zone.container.name
   )
-  type = var.recordsets[count.index].type
-  ttl  = var.recordsets[count.index].ttl
+  type = each.value.type
+  ttl  = each.value.ttl
 
-  records = var.recordsets[count.index].records
+  records = each.value.records
 }
