@@ -6,25 +6,28 @@ terraform {
   }
 }
 
-locals {
-  recordsets = {
-    for rs in var.recordsets : "${rs.name} ${rs.type}" => rs
-  }
+module "normalize" {
+  source = "terraformdns/normalize-recordsets/template"
+
+  target_zone_name = var.route53_zone.name
+  recordsets       = var.recordsets
 }
 
-data "aws_route53_zone" "container" {
-  zone_id = var.route53_zone_id
+locals {
+  recordsets = {
+    for rs in module.normalize.normalized : "${rs.name} ${rs.type}" => rs
+  }
 }
 
 resource "aws_route53_record" "this" {
   for_each = local.recordsets
 
-  zone_id = data.aws_route53_zone.container.zone_id
+  zone_id = var.route53_zone.id
 
   name = (
     each.value.name != "" ?
-    "${each.value.name}.${data.aws_route53_zone.container.name}" :
-    data.aws_route53_zone.container.name
+    "${each.value.name}.${var.route53_zone.name}" :
+    var.route53_zone.name
   )
   type = each.value.type
   ttl  = each.value.ttl

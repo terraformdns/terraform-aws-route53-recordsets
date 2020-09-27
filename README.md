@@ -13,7 +13,7 @@ resource "aws_route53_zone" "example" {
 module "dns_records" {
   source = "terraformdns/route53-recordsets/aws"
 
-  route53_zone_id = aws_route53_zone.example.id
+  route53_zone = aws_route53_zone.example
   recordsets = [
     {
       name    = "www"
@@ -63,15 +63,33 @@ least a single major version. Future major versions may have new or different
 required arguments, and may use a different internal structure that could
 cause recordsets to be removed and replaced by the next plan.
 
+Although this module can in principle support any record type that Route53
+would accept, its own logic is focused on the following record types and so
+other record types may misbehave or may see different behavior in future
+releases:
+
+* `A`
+* `AAAA`
+* `CNAME`
+* `DNAME`
+* `MX`
+* `NS`
+* `SRV`
+* `TXT`
+
 ## Arguments
 
-- `route53_zone_id` is the id of the zone to add records to. Any existing
-  records in this zone that do not conflict with given recordsets will be
-  left unchanged.
+- `route53_zone` is the the zone to add records to. The easiest way to populate
+  this is to assign your existing `aws_route53_zone` or `data.aws_route53_zone`
+  resource directly, though at minimum it requires only an object with
+  `id` and `name` attributes.
+
+  Any existing records in this zone that do not conflict with given recordsets
+  will be left unchanged.
 - `recordsets` is a list of DNS recordsets in the standard `terraformdns`
   recordset format.
 
-This module requires the `aws` provider.
+This module requires a default configuration for the `hashicorp/aws` provider.
 
 ## Limitations
 
